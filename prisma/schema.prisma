@@ -19,25 +19,31 @@ model User {
   walletEvmId  String?    @unique
   walletSvmId  String?    @unique
   walletSuiId  String?    @unique
-  walletEvm WalletEVM? @relation(fields: [walletEvmId], references: [address])
-  walletSvm WalletSVM? @relation(fields: [walletSvmId], references: [address])
-  walletSui WalletSUI? @relation(fields: [walletSuiId], references: [address])
+  walletEvm WalletEVM?
+  walletSvm WalletSVM?
+  walletSui WalletSUI?
 }
 
 model WalletEVM {
   address   String   @id
   user      User     @relation(fields: [userId], references: [discordId])
   userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model WalletSVM {
   address   String   @id
   user      User     @relation(fields: [userId], references: [discordId])
   userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model WalletSUI {
   address   String   @id
   user      User     @relation(fields: [userId], references: [discordId])
   userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

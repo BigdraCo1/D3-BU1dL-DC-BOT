@@ -14,12 +14,19 @@ A high-performance Discord bot built with TypeScript and Bun runtime for blazing
 - 🛡️ **Error Handling** - Comprehensive error handling and logging
 - 🎨 **Colorized Logs** - Pretty console logging with colors
 - 🏷️ **Command Categories** - Organized commands by category (Utility, Info, General, etc.)
+- 💼 **Wallet Verification** - Secure crypto wallet verification (EVM, SUI, SVM)
+- 🗄️ **Database Integration** - PostgreSQL with Prisma ORM
+- 🔴 **Redis Cache** - Fast verification storage and distributed locking
+- 🔒 **Signature Verification** - Cryptographic proof of wallet ownership
 
 ## 📋 Prerequisites
 
 - [Bun](https://bun.sh) v1.0 or higher
 - A Discord Bot Token ([Create one here](https://discord.com/developers/applications))
 - Discord Application with proper intents enabled
+- PostgreSQL database
+- Redis server (for verification caching)
+- Frontend application for wallet signature collection (optional)
 
 ## 🚀 Quick Start
 
@@ -42,6 +49,16 @@ Create a `.env` file in the root directory:
 # Discord Bot Configuration (REQUIRED)
 DISCORD_TOKEN=your_bot_token_here
 CLIENT_ID=your_application_id_here
+
+# Database Configuration (REQUIRED)
+DATABASE_URL=postgresql://username:password@localhost:5432/dbname
+
+# Redis Configuration (REQUIRED)
+REDIS_URL=redis://localhost:6379
+
+# Verification Server Configuration
+VS_PORT=3001
+FRONTEND_URL=http://localhost:5173
 
 # Optional Configuration
 GUILD_ID=your_test_guild_id_here
@@ -106,20 +123,30 @@ discord-bot/
 │   │   ├── avatar.ts         # Display user avatars
 │   │   ├── role.ts           # Role information
 │   │   ├── channels.ts       # List server channels
-│   │   └── categories.ts     # List channel categories
+│   │   ├── categories.ts     # List channel categories
+│   │   └── wallet.ts         # Wallet verification and management
 │   ├── events/               # Event handlers
 │   │   ├── ready.ts          # Bot ready event
 │   │   ├── interactionCreate.ts  # Interaction handling
 │   │   └── error.ts          # Error handling
 │   ├── types/                # TypeScript type definitions
 │   │   └── index.ts          # Main types and interfaces
+│   ├── dto/                  # Data Transfer Objects
+│   │   └── wallet.dto.ts     # Wallet verification DTOs and validation
 │   ├── utils/                # Utility functions
 │   │   ├── logger.ts         # Logging utility with colors
 │   │   ├── commandHandler.ts # Command loading/registration
-│   │   └── eventHandler.ts   # Event loading
-│   ├── config.ts             # Bot configuration
+│   │   ├── eventHandler.ts   # Event loading
+│   │   ├── redis.ts          # Redis client singleton
+│   │   ├── verificationStore.ts # Verification storage in Redis
+│   │   └── verificationServer.ts # HTTP server for wallet verification
+│   ├── config.ts             # Bot configuration and Prisma client
 │   ├── index.ts              # Main entry point
 │   └── deploy-commands.ts    # Command deployment script
+├── prisma/
+│   └── schema.prisma         # Database schema
+├── generated/
+│   └── prisma/               # Generated Prisma client
 ├── .env.example              # Environment variables template
 ├── .gitignore               # Git ignore rules
 ├── package.json             # Package configuration
@@ -141,6 +168,107 @@ discord-bot/
 | `/role <role>` | Get detailed information about a server role | Info |
 | `/channels` | List all channels in the server | Info |
 | `/categories` | List all channel categories in the server | Info |
+| `/wallet verify` | Verify and connect your crypto wallet (EVM/SUI/SVM) | Utility |
+| `/wallet view [user]` | View connected wallets for yourself or another user | Utility |
+
+## 💼 Wallet Verification System
+
+### Overview
+
+The wallet verification system allows users to securely connect their crypto wallets to their Discord accounts using cryptographic signatures. Supports:
+
+- **EVM Chains** - Ethereum, Polygon, BSC, Avalanche, etc.
+- **SUI Chain** - Sui blockchain wallets
+- **SVM Chain** - Solana virtual machine wallets
+
+### How It Works
+
+1. User runs `/wallet verify` in Discord
+2. Selects wallet type (EVM/SUI/SVM)
+3. Clicks verification link to open frontend
+4. Connects wallet and signs a verification message
+5. Signature is verified on the backend
+6. Wallet is linked to Discord account
+7. User receives confirmation via DM
+8. Guild message updates to show success
+
+### Architecture
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   Discord   │────▶│  Discord Bot │────▶│  Postgres   │
+│    User     │     │   (Bun.js)   │     │  Database   │
+└─────────────┘     └──────────────┘     └─────────────┘
+       │                    │                     ▲
+       │                    ▼                     │
+       │            ┌──────────────┐              │
+       │            │    Redis     │              │
+       │            │  (Sessions)  │              │
+       │            └──────────────┘              │
+       │                    │                     │
+       ▼                    ▼                     │
+┌─────────────┐     ┌──────────────┐             │
+│  Frontend   │────▶│   Verify API │─────────────┘
+│   (Vite)    │     │  (Bun HTTP)  │
+└─────────────┘     └──────────────┘
+```
+
+### Security Features
+
+- **Cryptographic Signatures** - Users sign a unique message to prove wallet ownership
+- **Time-Limited Sessions** - Verification sessions expire after 5 minutes
+- **UUIDv7 Timestamps** - Built-in timestamp validation for session expiry
+- **Distributed Locking** - Redis-based locks prevent duplicate processing
+- **Idempotency** - Duplicate requests are handled gracefully
+- **No Private Keys** - Only signatures are used, never private keys
+
+### Database Schema
+
+```prisma
+model User {
+  discordId   String      @id
+  walletEvmId String?     @unique
+  walletSvmId String?     @unique
+  walletSuiId String?     @unique
+  walletEvm   WalletEVM?
+  walletSvm   WalletSVM?
+  walletSui   WalletSUI?
+}
+
+model WalletEVM {
+  address   String   @id
+  user      User     @relation(fields: [userId], references: [discordId])
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+### API Endpoints
+
+The verification server runs on port 3001 (configurable via `VS_PORT`):
+
+- `POST /verify` - Submit wallet signature for verification
+- `GET /health` - Health check and statistics
+
+### Redis Data Structure
+
+Verification sessions are stored in Redis with automatic expiration:
+
+```
+Key: verification:{verificationId}
+TTL: 300 seconds (5 minutes)
+Value: {
+  verificationId: string
+  userId: string
+  username: string
+  walletType: "EVM" | "SUI" | "SVM"
+  messageId?: string
+  channelId?: string
+  createdAt: Date
+  expiresAt: Date
+}
+```
 
 ## 🔨 Creating Custom Commands
 
@@ -252,10 +380,98 @@ The event will be automatically loaded on next restart.
 |----------|-------------|----------|---------|
 | `DISCORD_TOKEN` | Your Discord bot token | ✅ Yes | - |
 | `CLIENT_ID` | Your Discord application client ID | ✅ Yes | - |
+| `DATABASE_URL` | PostgreSQL connection string | ✅ Yes | - |
+| `REDIS_URL` | Redis connection string | ✅ Yes | `redis://localhost:6379` |
+| `VS_PORT` | Verification server port | ❌ No | `3001` |
+| `FRONTEND_URL` | Frontend application URL for verification | ❌ No | `http://localhost:5173` |
 | `GUILD_ID` | Guild ID for testing (faster updates) | ❌ No | - |
 | `NODE_ENV` | Environment (development/production) | ❌ No | `development` |
 | `LOG_LEVEL` | Logging level (debug/info/warn/error) | ❌ No | `info` |
 | `OWNER_ID` | Bot owner's Discord user ID | ❌ No | - |
+
+## 🗄️ Database Setup
+
+### 1. Install PostgreSQL
+
+```bash
+# macOS
+brew install postgresql@15
+brew services start postgresql@15
+
+# Ubuntu/Debian
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+
+# Windows
+# Download from https://www.postgresql.org/download/windows/
+```
+
+### 2. Create Database
+
+```bash
+# Connect to PostgreSQL
+psql postgres
+
+# Create database and user
+CREATE DATABASE discord_bot;
+CREATE USER bot_user WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE discord_bot TO bot_user;
+\q
+```
+
+### 3. Configure DATABASE_URL
+
+```env
+DATABASE_URL=postgresql://bot_user:your_password@localhost:5432/discord_bot
+```
+
+### 4. Run Migrations
+
+```bash
+# Generate Prisma Client
+bun run prisma generate
+
+# Push schema to database
+bun run prisma db push
+
+# Or use migrations
+bun run prisma migrate dev --name init
+```
+
+## 🔴 Redis Setup
+
+### 1. Install Redis
+
+```bash
+# macOS
+brew install redis
+brew services start redis
+
+# Ubuntu/Debian
+sudo apt install redis-server
+sudo systemctl start redis
+
+# Windows
+# Use WSL or download from https://github.com/microsoftarchive/redis/releases
+```
+
+### 2. Verify Redis is Running
+
+```bash
+redis-cli ping
+# Should return: PONG
+```
+
+### 3. Configure REDIS_URL
+
+```env
+REDIS_URL=redis://localhost:6379
+```
+
+For Redis with authentication:
+```env
+REDIS_URL=redis://:password@localhost:6379
+```
 
 ## 📊 Performance Benefits of Bun
 
@@ -431,8 +647,15 @@ Need help? Here are some resources:
 
 Future features and improvements:
 
-- [ ] Database integration with Prisma
+- [x] Database integration with Prisma
+- [x] Wallet verification system (EVM/SUI/SVM)
+- [x] Redis caching and session management
+- [ ] SUI wallet signature verification implementation
+- [ ] SVM (Solana) wallet signature verification implementation
 - [ ] User profile and stats tracking
+- [ ] Wallet-gated roles and permissions
+- [ ] NFT ownership verification
+- [ ] Token balance checking
 - [ ] Music playback commands
 - [ ] Advanced moderation tools
 - [ ] Custom prefix support

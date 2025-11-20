@@ -3,8 +3,6 @@ import {
   ChatInputCommandInteraction,
   PermissionFlagsBits,
   ChannelType,
-  Role,
-  OverwriteType,
 } from "discord.js";
 import type { Command } from "../types";
 import { CommandCategory } from "../types";

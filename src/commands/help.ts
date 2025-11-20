@@ -167,7 +167,7 @@ async function handleGeneralHelp(
         await selectInteraction.reply({
           content:
             "❌ This menu is not for you! Use `/help` to get your own help menu.",
-          ephemeral: true,
+          flags: 64,
         });
         return;
       }
@@ -311,7 +311,7 @@ async function handleSpecificCommand(
   if (!command) {
     await interaction.reply({
       content: `❌ Command \`${commandName}\` not found! Use \`/help\` to see all available commands.`,
-      ephemeral: true,
+      flags: 64,
     });
     return;
   }
