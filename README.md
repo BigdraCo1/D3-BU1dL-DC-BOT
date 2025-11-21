@@ -207,8 +207,8 @@ The wallet verification system allows users to securely connect their crypto wal
        │            └──────────────┘              │
        │                    │                     │
        ▼                    ▼                     │
-┌─────────────┐     ┌──────────────┐             │
-│  Frontend   │────▶│   Verify API │─────────────┘
+┌─────────────┐     ┌──────────────┐              │
+│  Frontend   │────▶│   Verify API │─────────────-┘
 │   (Vite)    │     │  (Bun HTTP)  │
 └─────────────┘     └──────────────┘
 ```
@@ -334,7 +334,7 @@ const command: Command = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     const subcommand = interaction.options.getSubcommand();
-    
+
     if (subcommand === 'view') {
       await interaction.reply('Showing settings...');
     } else if (subcommand === 'update') {
@@ -360,7 +360,7 @@ const guildMemberAdd: Event<Events.GuildMemberAdd> = {
 
   async execute(member: GuildMember) {
     logger.info(`New member joined: ${member.user.tag}`);
-    
+
     // Send welcome message
     const channel = member.guild.systemChannel;
     if (channel) {
