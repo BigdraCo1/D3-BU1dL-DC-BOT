@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import type { Command } from "../types";
 import { CommandCategory } from "../types";
+import { DISCORD_COLORS } from "@/shared/constants";
 
 const info: Command = {
   data: new SlashCommandBuilder()
@@ -61,7 +62,7 @@ async function handleBotInfo(interaction: ChatInputCommandInteraction) {
   const seconds = Math.floor(uptime / 1000) % 60;
 
   const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
+    .setColor(DISCORD_COLORS.Discord)
     .setTitle("🤖 Bot Information")
     .setThumbnail(client.user?.displayAvatarURL() || "")
     .addFields(
@@ -118,7 +119,7 @@ async function handleServerInfo(interaction: ChatInputCommandInteraction) {
   const createdAt = Math.floor(guild.createdTimestamp / 1000);
 
   const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
+    .setColor(DISCORD_COLORS.Discord)
     .setTitle("🏰 Server Information")
     .setThumbnail(guild.iconURL() || "")
     .addFields(
@@ -175,7 +176,7 @@ async function handleUserInfo(interaction: ChatInputCommandInteraction) {
   const member = interaction.guild?.members.cache.get(targetUser.id);
 
   const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
+    .setColor(DISCORD_COLORS.Discord)
     .setTitle("👤 User Information")
     .setThumbnail(targetUser.displayAvatarURL({ size: 256 }))
     .addFields(

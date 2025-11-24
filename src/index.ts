@@ -60,8 +60,6 @@ async function main() {
         logger.error("Failed to register commands:", error);
       }
     });
-
-    // ... rest of the code
   } catch (error) {
     logger.error("Failed to start bot:", error);
     process.exit(1);
