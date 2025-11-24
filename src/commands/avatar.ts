@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import type { Command } from "../types";
 import { CommandCategory } from "../types";
+import { DISCORD_COLORS } from "@/shared/constants";
 
 const avatar: Command = {
   data: new SlashCommandBuilder()
@@ -21,7 +22,7 @@ const avatar: Command = {
     const user = interaction.options.getUser("user") || interaction.user;
 
     const embed = new EmbedBuilder()
-      .setColor(0x5865f2)
+      .setColor(DISCORD_COLORS.Discord)
       .setTitle(`${user.tag}'s Avatar`)
       .setImage(user.displayAvatarURL({ size: 1024 }))
       .setDescription(

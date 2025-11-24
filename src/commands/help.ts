@@ -10,6 +10,7 @@ import {
 import type { Command, ExtendedClient } from "../types";
 import { CommandCategory } from "../types";
 import { logger } from "@/utils/logger";
+import { DISCORD_COLORS } from "@/shared/constants";
 
 const help: Command = {
   data: new SlashCommandBuilder()
@@ -57,7 +58,7 @@ async function handleGeneralHelp(
   const commands = Array.from(client.commands.values());
 
   const mainEmbed = new EmbedBuilder()
-    .setColor(0x5865f2)
+    .setColor(DISCORD_COLORS.Discord)
     .setTitle("📚 Bot Help Menu")
     .setDescription(
       `Hello! I'm a Discord bot built with TypeScript and Bun for maximum performance.\n\n` +
@@ -245,7 +246,7 @@ function createCategoryEmbed(
     categoryTitles[category.toLowerCase()] || `${category} Commands`;
 
   const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
+    .setColor(DISCORD_COLORS.Discord)
     .setTitle(`${emoji} ${title}`)
     .setDescription(
       `Here are the available commands in this category:\n\nTotal: **${commands.length}** command${commands.length === 1 ? "" : "s"}`,
@@ -317,7 +318,7 @@ async function handleSpecificCommand(
   }
 
   const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
+    .setColor(DISCORD_COLORS.Discord)
     .setTitle(`📖 Command: /${command.data.name}`)
     .setDescription(command.data.description || "No description available.")
     .setTimestamp()

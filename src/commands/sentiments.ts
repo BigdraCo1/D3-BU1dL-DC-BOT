@@ -12,6 +12,7 @@ import {
   type Sentiment,
 } from "@/dto/sentiment.dto";
 import { fetchSentimentData } from "@/utils/callApi";
+import { DISCORD_COLORS } from "@/shared/constants";
 import { logger } from "@/utils/logger";
 
 const sentiments: Command = {
@@ -64,16 +65,14 @@ const sentiments: Command = {
     let positive: number | undefined = result?.filter(
       (val) => val.sentiment == ("Positive" as Sentiment),
     ).length;
-    const negative: number | undefined =
-      (!result?.length ? 0 : result.length) -
-      (!neutral ? 0 : neutral) -
-      (!positive ? 0 : positive);
 
     neutral = !neutral ? 0 : neutral;
     positive = !positive ? 0 : positive;
 
+    const total = !result?.length ? 0 : result.length;
+    const negative: number | undefined = total - neutral - positive;
+
     // Calculate percentages
-    const total = positive + negative + neutral;
     const positivePercent =
       total > 0 ? ((positive / total) * 100).toFixed(1) : "0.0";
     const negativePercent =
@@ -82,18 +81,22 @@ const sentiments: Command = {
       total > 0 ? ((neutral / total) * 100).toFixed(1) : "0.0";
 
     // Determine overall sentiment
-    let overallSentiment = "Neutral";
-    let overallColor = 0xfee75c; // Yellow for neutral
-    let overallEmoji = "➡️";
+    let overallSentiment: string;
+    let overallColor;
+    let overallEmoji: string;
 
     if (positive > negative && positive > neutral) {
       overallSentiment = "Positive";
-      overallColor = 0x57f287; // Green
+      overallColor = DISCORD_COLORS.Green;
       overallEmoji = "📈";
     } else if (negative > positive && negative > neutral) {
       overallSentiment = "Negative";
-      overallColor = 0xed4245; // Red
+      overallColor = DISCORD_COLORS.Red;
       overallEmoji = "📉";
+    } else {
+      overallSentiment = "Neutral";
+      overallColor = DISCORD_COLORS.Yellow;
+      overallEmoji = "➡️";
     }
 
     // Create visual progress bars

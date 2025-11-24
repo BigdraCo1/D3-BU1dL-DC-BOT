@@ -8,6 +8,7 @@ import {
 import type { Command } from "../types";
 import { CommandCategory } from "../types";
 import { logger } from "@/utils/logger";
+import { DISCORD_COLORS } from "@/shared/constants";
 
 const role: Command = {
   data: new SlashCommandBuilder()
@@ -88,7 +89,7 @@ async function handleAddRole(interaction: ChatInputCommandInteraction) {
   }
 
   const success_embed = new EmbedBuilder()
-    .setColor(0x57f287)
+    .setColor(DISCORD_COLORS.Green)
     .setTitle("✅ Role Added")
     .setDescription(`Successfully added ${role} to ${member}`)
     .addFields(
@@ -99,7 +100,7 @@ async function handleAddRole(interaction: ChatInputCommandInteraction) {
     .setTimestamp();
 
   const failed_embed = new EmbedBuilder()
-    .setColor(0x57f287)
+    .setColor(DISCORD_COLORS.Green)
     .setTitle("❌ Role Failed Added")
     .setDescription(`Failed to add role ${role.name} to ${user.username}`)
     .addFields(
@@ -137,7 +138,7 @@ async function handleRemoveRole(interaction: ChatInputCommandInteraction) {
   }
 
   const success_embed = new EmbedBuilder()
-    .setColor(0x57f287)
+    .setColor(DISCORD_COLORS.Green)
     .setTitle("✅ Role Removed")
     .setDescription(`Successfully removed ${role} from ${member}`)
     .addFields(
@@ -148,7 +149,7 @@ async function handleRemoveRole(interaction: ChatInputCommandInteraction) {
     .setTimestamp();
 
   const failed_embed = new EmbedBuilder()
-    .setColor(0x57f287)
+    .setColor(DISCORD_COLORS.Green)
     .setTitle("❌ Role Failed Removed")
     .setDescription(`Failed to remove role ${role.name} from ${user.username}`)
     .addFields(

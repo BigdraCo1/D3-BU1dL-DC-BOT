@@ -19,6 +19,7 @@ import {
   validateWalletAddress,
   getTimestampFromUUIDv7,
 } from "../dto/wallet.dto";
+import { DISCORD_COLORS } from "@/shared/constants";
 
 const frontend_url = process.env.FRONTEND_URL || "http://localhost:5173";
 
@@ -118,7 +119,7 @@ async function handleWalletVerification(
 
   // Create embed
   const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
+    .setColor(DISCORD_COLORS.Discord)
     .setTitle("🔐 Wallet Verification")
     .setDescription(
       "Connect your crypto wallet to access exclusive features and benefits!\n\n" +
@@ -295,7 +296,7 @@ async function handleWalletVerification(
       if (!pendingVerification) {
         // Verification already completed or expired
         const alreadyCompletedEmbed = new EmbedBuilder()
-          .setColor(0x5865f2)
+          .setColor(DISCORD_COLORS.Discord)
           .setTitle("⚠️ Verification Already Completed")
           .setDescription(
             "Your verification has already been completed or expired.\n\n" +
@@ -804,7 +805,7 @@ async function handleWalletView(interaction: ChatInputCommandInteraction) {
     }
 
     const embed = new EmbedBuilder()
-      .setColor(0x5865f2)
+      .setColor(DISCORD_COLORS.Discord)
       .setTitle(`💼 ${targetUser.tag}'s Wallets`)
       .setDescription("Connected and verified wallet addresses")
       .setThumbnail(targetUser.displayAvatarURL())
