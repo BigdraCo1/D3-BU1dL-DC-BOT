@@ -1,0 +1,51 @@
+# Git
+.git
+.gitignore
+.github
+
+# Dependencies
+node_modules
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Build outputs
+dist
+build
+*.log
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+*.md
+!README.md
+LICENSE
+
+# Test files
+test
+tests
+*.test.ts
+*.spec.ts
+
+# CI/CD
+.github
+
+# Misc
+*.bak
+*.tmp
