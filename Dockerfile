@@ -1,5 +1,5 @@
-# Use Bun as the base image
-FROM oven/bun:1 AS base
+# Use Bun as the base image - pinned to match local version
+FROM oven/bun:1.2.12 AS base
 WORKDIR /app
 
 # Install dependencies into temp directory
@@ -21,6 +21,7 @@ COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
 # Generate Prisma Client
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
 RUN bun prisma generate
 
 # Copy production dependencies and source code into final image
