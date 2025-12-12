@@ -21,7 +21,7 @@ COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
 # Generate Prisma Client
-RUN bunx prisma generate
+RUN bun prisma generate
 
 # Copy production dependencies and source code into final image
 FROM base AS release
