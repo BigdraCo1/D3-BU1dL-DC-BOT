@@ -146,12 +146,14 @@ async function handleCreate(interaction: ChatInputCommandInteraction) {
 
   let channelType: ChannelType;
   switch (typeOp) {
-    case "voice":
+    case String(ChannelType.GuildVoice):
       channelType = ChannelType.GuildVoice;
       break;
     default:
       channelType = ChannelType.GuildText;
   }
+
+  logger.info(`Channel Type: ${channelType}`);
 
   const channel = await interaction.guild.channels.create({
     name: name,
