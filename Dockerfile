@@ -18,7 +18,10 @@ RUN cd /temp/prod && bun install --frozen-lockfile --production
 # Then copy all (non-ignored) project files into the image
 FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
-COPY . .
+COPY package.json bun.lock tsconfig.json ./
+COPY src ./src
+COPY prisma ./prisma
+COPY prisma.config.ts* ./
 
 # Generate Prisma Client
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
@@ -33,8 +36,6 @@ COPY --from=prerelease /app/tsconfig.json .
 COPY --from=prerelease /app/prisma ./prisma
 COPY --from=prerelease /app/generated ./generated
 COPY --from=prerelease /app/node_modules/.prisma ./node_modules/.prisma
-
-# Only copy prisma.config.ts if it exists (optional)
 COPY --from=prerelease /app/prisma.config.ts* ./
 
 # Create bunfig.toml for path alias resolution at runtime
