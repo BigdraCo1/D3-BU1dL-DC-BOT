@@ -23,6 +23,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from package.json
+        id: package-version
+        run: |
+          VERSION=$(cat package.json | grep '"version"' | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Package version: $VERSION"
+
+      - name: Generate build metadata
+        id: build-meta
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          BUILD_DATE=$(date -u +'%Y%m%d')
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "build_date=$BUILD_DATE" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -43,12 +60,19 @@ jobs:
         with:
           images: ${{ env.DOCKER_IMAGE }}
           tags: |
-            type=ref,event=branch
+            # For PRs: pr-<number>
             type=ref,event=pr
+            # For branches: <branch-name>
+            type=ref,event=branch
+            # For version tags: use semver
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=sha,prefix=sha-
+            # Auto version from package.json on main branch
+            type=raw,value=${{ steps.package-version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+            # Date-based tag on main branch
+            type=raw,value=${{ steps.build-meta.outputs.build_date }}-${{ steps.build-meta.outputs.short_sha }},enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+            # Latest tag on main branch
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
@@ -61,10 +85,14 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ steps.package-version.outputs.version }}
+            BUILD_DATE=${{ steps.build-meta.outputs.build_date }}
+            GIT_SHA=${{ github.sha }}
 
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v4
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
