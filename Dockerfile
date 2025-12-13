@@ -29,12 +29,16 @@ FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /app/src ./src
 COPY --from=prerelease /app/package.json .
+COPY --from=prerelease /app/tsconfig.json .
 COPY --from=prerelease /app/prisma ./prisma
 COPY --from=prerelease /app/generated ./generated
 COPY --from=prerelease /app/node_modules/.prisma ./node_modules/.prisma
 
 # Only copy prisma.config.ts if it exists (optional)
 COPY --from=prerelease /app/prisma.config.ts* ./
+
+# Create bunfig.toml for path alias resolution at runtime
+RUN printf '[run]\n\n[module]\npreload = []\n\n[resolve]\nalias = { "@" = "./src" }\n' > bunfig.toml
 
 # Set production environment
 ENV NODE_ENV=production
